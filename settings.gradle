@@ -1,0 +1,3 @@
+rootProject.name = 'buildtypes'
+include ':sample', ':plugin'
+

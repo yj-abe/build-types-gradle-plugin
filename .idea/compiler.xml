@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="buildtype.main" target="1.8" />
+      <module name="buildtype.test" target="1.8" />
+      <module name="buildtypes.buildtypesample.main" target="1.8" />
+      <module name="buildtypes.buildtypesample.test" target="1.8" />
+      <module name="buildtypes.main" target="1.8" />
+      <module name="buildtypes.test" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

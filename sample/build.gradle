@@ -1,0 +1,39 @@
+apply plugin: 'java'
+apply plugin: 'jp.cloudace.buildtypes'
+
+group 'jp.cloudace.buildconfig.sample'
+version '1.0.0'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+buildscript {
+    dependencies {
+        classpath files("../plugin/build/libs/buildtypes-plugin-1.0.0.jar")
+    }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+buildTypes {
+    local {
+        debuggable = true
+        buildConfigField "java.lang.String", "TEST", "\"abc\""
+        buildConfigField "int", "INTEGER", "1"
+        buildConfigField "Integer", "WRAPPED_INTEGER", "1"
+    }
+    staging {
+        buildConfigField "java.lang.String", "TEST", "\"abc\""
+        buildConfigField "int", "INTEGER", "1"
+        buildConfigField "Integer", "WRAPPED_INTEGER", "1"
+    }
+}
+
+buildSettings {
+    developOn "local"
+}
