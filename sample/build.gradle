@@ -16,37 +16,33 @@ buildscript {
     }
 }
 
-sourceSets {
-//    local {
-//        java.srcDirs += 'build/generated/sources/buildConfig/local'
-//    }
-//    main {
-//        java.srcDirs += sourceSets.local.java.srcDirs
-//    }
-}
-
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
 buildTypes {
-    developOn "staging"
+    developOn "local"
     types {
         local {
             debuggable = true
             buildConfigField "java.lang.String", "TEST", "\"abc\""
             buildConfigField "int", "INTEGER", "1"
             buildConfigField "Integer", "WRAPPED_INTEGER", "1"
+            buildConfigField "String", "API_KEY", "\"dummy_api_key\""
         }
         staging {
             buildConfigField "java.lang.String", "TEST", "\"abc\""
             buildConfigField "int", "INTEGER", "1"
             buildConfigField "Integer", "WRAPPED_INTEGER", "1"
+            buildConfigField "String", "API_KEY", "\"fkajfdlksajfaflkdsjafl\""
         }
     }
 }
 
 task show() {
+    dependsOn("buildStaging")
+    dependsOn("assemble")
+    tasks.assemble.mustRunAfter("buildStaging")
     doLast {
         sourceSets.each { ss ->
             println(ss)

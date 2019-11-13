@@ -1,6 +1,9 @@
 package jp.cloudace.buildtypes.extention
 
 import groovy.lang.Closure
+import jp.cloudace.buildtypes.ext.javaConvention
+import jp.cloudace.buildtypes.processor.MainSourceProcessor
+import jp.cloudace.buildtypes.task.ClasspathTask
 import jp.cloudace.buildtypes.task.CleanBuildConfigTask
 import jp.cloudace.buildtypes.task.GenerateBuildConfigTask
 import org.gradle.api.Action
@@ -13,20 +16,13 @@ open class BuildTypes(project: Project) {
 
     var developOn: String? = null
 
-    private val buildTypes: NamedDomainObjectContainer<BuildType> = project.container(BuildType::class.java) {
+    val buildTypes: NamedDomainObjectContainer<BuildType> = project.container(BuildType::class.java) {
         val javaConvention = project.convention.getPlugin(JavaPluginConvention::class.java) as JavaPluginConvention
         BuildType(it).apply {
             createSourceSet(javaConvention.sourceSets, Action { sourceSet ->
                 if (developOn == name) {
-                    project.tasks.getByName("compileJava").let { compileTask ->
-                        sourceSet.java.srcDirs.forEach { dir -> (compileTask as JavaCompile).source(dir) }
-                        javaConvention.sourceSets.getByName("main").java { sourceDirectorySet ->
-                            val current = sourceDirectorySet.srcDirs
-                            current.addAll(sourceSet.java.srcDirs)
-                            current.add(outputDir(project))
-                            sourceDirectorySet.srcDirs(current)
-                        }
-                    }
+                    MainSourceProcessor(project).addSourceSet(sourceSet, this)
+                    println("set develop on")
                 }
             })
             createBuildConfigTasks(project, this)
@@ -43,20 +39,53 @@ open class BuildTypes(project: Project) {
             "generate${capitalizedTypeName}BuildConfig",
             GenerateBuildConfigTask::class.java,
             buildType
-        ).let { task ->
+        ).let { generateTask ->
             project.tasks.create(
                 "clean${capitalizedTypeName}BuildConfig",
                 CleanBuildConfigTask::class.java,
                 buildType.outputDir(project)
             ).let { cleanTask ->
-                task.dependsOn(cleanTask.name)
+                generateTask.dependsOn(cleanTask.name)
             }
 
             project.tasks.getByName("compile${capitalizedTypeName}Java").let { compileTask ->
-                compileTask.dependsOn(task)
+                compileTask.dependsOn(generateTask)
                 (compileTask as JavaCompile).source(buildType.outputDir(project))
             }
-            project.tasks.getByName("compileJava").dependsOn(task)
+
+            project.tasks.getByName("compileJava").dependsOn(generateTask)
+            project.tasks.create(
+                "setup${capitalizedTypeName}Classpath",
+                ClasspathTask::class.java,
+                this,
+                buildType
+            ).let { classpathTask ->
+
+                classpathTask.doLast {
+                    val developTargetType = buildTypes.getByName(developOn!!)
+                    val deleteSet = project.javaConvention.sourceSets.findByName(developTargetType.name)!!
+                    val addSet = project.javaConvention.sourceSets.findByName(buildType.name)!!
+
+                    val processor = MainSourceProcessor(project)
+                    processor.removeAndAddSourceSet(deleteSet, addSet, developTargetType, buildType)
+                    developOn = buildType.name
+//                    processor.removeAndAddSourceSet()
+//                    project.javaConvention.sourceSets.findByName(developTargetType.name)?.let {
+//                        processor.removeSourceSet(it, developTargetType)
+//                    }
+//                    project.javaConvention.sourceSets.findByName(buildType.name)?.let {
+//                        processor.addSourceSet(it, buildType)
+//                    }
+                }
+
+                project.tasks.create("build$capitalizedTypeName") {
+                    val compileJavaTask = project.tasks.getByName("compileJava")
+                    compileJavaTask.mustRunAfter(classpathTask)
+                    it.dependsOn(classpathTask)
+                    it.dependsOn(compileJavaTask)
+                }
+
+            }
         }
     }
 }
