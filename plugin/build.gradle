@@ -29,6 +29,6 @@ compileTestKotlin {
 gitRelease {
     groupId = "jp.cloudace"
     artifactId = "buildtypes"
-    repoUri = "git@github.com:yj-abe/build-types-gradle-plugin.git"
+    repoUri = "yj-abe@github.com:yj-abe/build-types-gradle-plugin.git"
     repoBranch = "maven-repository"
 }
