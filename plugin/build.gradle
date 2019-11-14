@@ -37,7 +37,3 @@ uploadArchives {
         }
     }
 }
-
-task show() {
-    println(project.version)
-}
