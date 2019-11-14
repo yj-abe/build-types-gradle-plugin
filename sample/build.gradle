@@ -38,15 +38,3 @@ buildTypes {
         }
     }
 }
-
-task show() {
-    dependsOn("buildStaging")
-    dependsOn("assemble")
-    tasks.assemble.mustRunAfter("buildStaging")
-    doLast {
-        sourceSets.each { ss ->
-            println(ss)
-            ss.allJava.srcDirs.each { dir -> println(dir) }
-        }
-    }
-}

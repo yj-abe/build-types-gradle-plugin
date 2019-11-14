@@ -3,7 +3,6 @@ package jp.cloudace.buildtypes.extention
 import groovy.lang.Closure
 import jp.cloudace.buildtypes.ext.javaConvention
 import jp.cloudace.buildtypes.processor.MainSourceProcessor
-import jp.cloudace.buildtypes.task.ClasspathTask
 import jp.cloudace.buildtypes.task.CleanBuildConfigTask
 import jp.cloudace.buildtypes.task.GenerateBuildConfigTask
 import org.gradle.api.Action
@@ -22,7 +21,6 @@ open class BuildTypes(project: Project) {
             createSourceSet(javaConvention.sourceSets, Action { sourceSet ->
                 if (developOn == name) {
                     MainSourceProcessor(project).addSourceSet(sourceSet, this)
-                    println("set develop on")
                 }
             })
             createBuildConfigTasks(project, this)
@@ -54,35 +52,24 @@ open class BuildTypes(project: Project) {
             }
 
             project.tasks.getByName("compileJava").dependsOn(generateTask)
-            project.tasks.create(
-                "setup${capitalizedTypeName}Classpath",
-                ClasspathTask::class.java,
-                this,
-                buildType
-            ).let { classpathTask ->
+            project.tasks.create("setup${capitalizedTypeName}Classpath").let { classpathTask ->
 
                 classpathTask.doLast {
                     val developTargetType = buildTypes.getByName(developOn!!)
-                    val deleteSet = project.javaConvention.sourceSets.findByName(developTargetType.name)!!
-                    val addSet = project.javaConvention.sourceSets.findByName(buildType.name)!!
-
                     val processor = MainSourceProcessor(project)
-                    processor.removeAndAddSourceSet(deleteSet, addSet, developTargetType, buildType)
-                    developOn = buildType.name
-//                    processor.removeAndAddSourceSet()
-//                    project.javaConvention.sourceSets.findByName(developTargetType.name)?.let {
-//                        processor.removeSourceSet(it, developTargetType)
-//                    }
-//                    project.javaConvention.sourceSets.findByName(buildType.name)?.let {
-//                        processor.addSourceSet(it, buildType)
-//                    }
+                    project.javaConvention.sourceSets.findByName(developTargetType.name)?.let {
+                        processor.removeSourceSet(it, developTargetType)
+                    }
+                    project.javaConvention.sourceSets.findByName(buildType.name)?.let {
+                        processor.addSourceSet(it, buildType)
+                    }
                 }
 
                 project.tasks.create("build$capitalizedTypeName") {
-                    val compileJavaTask = project.tasks.getByName("compileJava")
-                    compileJavaTask.mustRunAfter(classpathTask)
+                    val buildTask = project.tasks.getByName("build")
+                    buildTask.mustRunAfter(classpathTask)
                     it.dependsOn(classpathTask)
-                    it.dependsOn(compileJavaTask)
+                    it.dependsOn(buildTask)
                 }
 
             }

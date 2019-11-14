@@ -13,38 +13,26 @@ class MainSourceProcessor(private val project: Project) {
 
     fun addSourceSet(sourceSet: SourceSet, buildType: BuildType) {
         mainSourceSet.apply {
-            java { sourceDirectorySet ->
-                val srcDirs = sourceDirectorySet.srcDirs
-                srcDirs.addAll(sourceSet.java.srcDirs)
-                srcDirs.add(buildType.outputDir(project))
-                sourceDirectorySet.srcDirs(srcDirs)
-            }
-            resources { sourceDirectorySet ->
-                val srcDirs = sourceDirectorySet.srcDirs
-                srcDirs.addAll(sourceSet.resources.srcDirs)
-                sourceDirectorySet.srcDirs(srcDirs)
-            }
+            java.setSrcDirs(java.srcDirs.apply {
+                addAll(sourceSet.java.srcDirs)
+                add(buildType.outputDir(project))
+            })
+            resources.setSrcDirs(resources.srcDirs.apply {
+                addAll(sourceSet.resources.srcDirs)
+            })
         }
     }
 
-    fun removeAndAddSourceSet(deleteSet: SourceSet, addSet: SourceSet, deleteType: BuildType, addType: BuildType) {
+    fun removeSourceSet(sourceSet: SourceSet, buildType: BuildType) {
         mainSourceSet.apply {
-            java.srcDirs.apply {
-                println("before remove : ")
-                forEach { println(it) }
-                removeAll(deleteSet.java.srcDirs)
-                remove(deleteType.outputDir(project))
-                addAll(addSet.java.srcDirs)
-                add(addType.outputDir(project))
-                println("after remove : ")
-                forEach { println(it) }
-            }
-            resources.srcDirs.apply {
-                removeAll(deleteSet.resources.srcDirs)
-                addAll(addSet.resources.srcDirs)
-            }
+            java.setSrcDirs(java.srcDirs.apply {
+                removeAll(sourceSet.java.srcDirs)
+                remove(buildType.outputDir(project))
+            })
+            resources.setSrcDirs(resources.srcDirs.apply {
+                removeAll(sourceSet.resources.srcDirs)
+            })
         }
     }
-
 
 }
