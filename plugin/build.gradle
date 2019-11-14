@@ -1,8 +1,8 @@
 apply plugin: 'kotlin'
-apply plugin: 'com.github.kamatama41.git-release'
+apply plugin: 'maven'
 
 group 'jp.cloudace'
-version '1.0.0'
+version '0.1.0'
 
 sourceCompatibility = 1.8
 
@@ -26,9 +26,18 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-gitRelease {
-    groupId = "jp.cloudace"
-    artifactId = "buildtypes"
-    repoUri = "yj-abe@github.com:yj-abe/build-types-gradle-plugin.git"
-    repoBranch = "maven-repository"
+def repo = new File(rootDir, "repository")
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository url: "file://${repo.absolutePath}"
+            pom.version = project.version
+            pom.groupId = 'jp.cloudace'
+            pom.artifactId = 'buildtypes'
+        }
+    }
+}
+
+task show() {
+    println(project.version)
 }
