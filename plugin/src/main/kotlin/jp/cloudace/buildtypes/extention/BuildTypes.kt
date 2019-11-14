@@ -15,7 +15,7 @@ open class BuildTypes(project: Project) {
 
     var developOn: String? = null
 
-    val buildTypes: NamedDomainObjectContainer<BuildType> = project.container(BuildType::class.java) {
+    val types: NamedDomainObjectContainer<BuildType> = project.container(BuildType::class.java) {
         val javaConvention = project.convention.getPlugin(JavaPluginConvention::class.java) as JavaPluginConvention
         BuildType(it).apply {
             createSourceSet(javaConvention.sourceSets, Action { sourceSet ->
@@ -28,7 +28,7 @@ open class BuildTypes(project: Project) {
     }
 
     fun types(closure: Closure<BuildType>) {
-        buildTypes.configure(closure)
+        types.configure(closure)
     }
 
     private fun createBuildConfigTasks(project: Project, buildType: BuildType) {
@@ -55,7 +55,7 @@ open class BuildTypes(project: Project) {
             project.tasks.create("setup${capitalizedTypeName}Classpath").let { classpathTask ->
 
                 classpathTask.doLast {
-                    val developTargetType = buildTypes.getByName(developOn!!)
+                    val developTargetType = types.getByName(developOn!!)
                     val processor = MainSourceProcessor(project)
                     project.javaConvention.sourceSets.findByName(developTargetType.name)?.let {
                         processor.removeSourceSet(it, developTargetType)
