@@ -33,14 +33,6 @@ buildscript {
 apply plugin: 'jp.cloudace.buildtypes'
 ```
 
-または
-
-```groovy
-plugins {
-    id 'jp.cloudace.buildtypes' version '0.2.0'
-}
-```
-
 ## DSL
 
 ```groovy
