@@ -12,7 +12,7 @@ repositories {
 
 buildscript {
     dependencies {
-        classpath files("../plugin/build/libs/buildtypes-plugin-1.0.0.jar")
+        classpath files("../plugin/build/libs/buildtypes-plugin-0.3.0.jar")
     }
 }
 
@@ -29,6 +29,9 @@ buildTypes {
             buildConfigField "int", "INTEGER", "1"
             buildConfigField "Integer", "WRAPPED_INTEGER", "1"
             buildConfigField "String", "API_KEY", "\"dummy_api_key\""
+            buildConfigField "jp.cloudace.buildconfig.sample.other.ReferenceType", "OBJ", "new ReferenceType()"
+            buildConfigField "String[]", "ARRAY", "{\"abc\", \"def\"}"
+            buildConfigField "java.util.List<String[]>", "STRING_ARRAY_LIST", "new java.util.ArrayList<>()"
         }
         staging {
             buildConfigField "java.lang.String", "TEST", "\"abc\""

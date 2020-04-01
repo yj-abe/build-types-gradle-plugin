@@ -1,10 +1,7 @@
 package jp.cloudace.buildtypes.generator
 
-import com.squareup.javapoet.FieldSpec
-import com.squareup.javapoet.JavaFile
-import com.squareup.javapoet.TypeSpec
+import com.squareup.javapoet.*
 import jp.cloudace.buildtypes.extention.BuildType
-import java.lang.reflect.Type
 import javax.lang.model.element.Modifier
 
 object BuildConfigGenerator : JavaCodeGenerator<BuildType> {
@@ -30,25 +27,45 @@ object BuildConfigGenerator : JavaCodeGenerator<BuildType> {
                 .initializer(it.value)
                 .build()
         }.forEach { classBuilder.addField(it) }
-
         return JavaFile.builder(rootPackage, classBuilder.build()).build()
     }
 
-    private fun typeOf(typeName: String): Type {
-        return when (typeName) {
-            "String" -> String::class.java
-            "byte" -> Byte::class.java
-            "short" -> Short::class.java
-            "int" -> Int::class.java
-            "long" -> Long::class.java
-            "boolean" -> Boolean::class.java
-            "Byte" -> java.lang.Byte::class.java
-            "Short" -> java.lang.Short::class.java
-            "Integer" -> java.lang.Integer::class.java
-            "Long" -> java.lang.Long::class.java
-            "Boolean" -> java.lang.Boolean::class.java
-            else -> Class.forName(typeName)
+    private fun typeOf(typeName: String): TypeName {
+        return when {
+            typeName.endsWith("[]") -> {
+                ArrayTypeName.of(typeOf(typeName.substring(0, typeName.length - 2)))
+            }
+            isGenerics(typeName) -> {
+                "([^<]+)<(.+)>$".toRegex().matchEntire(typeName)?.groupValues?.let { group ->
+                    val typeArgs = if (isGenerics(group[2])) {
+                        arrayOf(typeOf(group[2]))
+                    } else {
+                        group[2].split(",")
+                            .map { arg -> arg.trim() }
+                            .map { arg -> typeOf(arg) }
+                            .toTypedArray()
+                    }
+                    ParameterizedTypeName.get(ClassName.bestGuess(group[1]), *typeArgs)
+                } ?: throw IllegalStateException("not reached")
+            }
+            else -> when (typeName) {
+                "String" -> TypeName.get(String::class.java)
+                "byte" -> TypeName.BYTE
+                "short" -> TypeName.SHORT
+                "int" -> TypeName.INT
+                "long" -> TypeName.LONG
+                "boolean" -> TypeName.BOOLEAN
+                "Byte" -> TypeName.BYTE.box()
+                "Short" -> TypeName.SHORT.box()
+                "Integer" -> TypeName.INT.box()
+                "Long" -> TypeName.LONG.box()
+                "Boolean" -> TypeName.BOOLEAN.box()
+                else -> ClassName.bestGuess(typeName)
+            }
         }
     }
 
+    private fun isGenerics(target: String): Boolean {
+        return target.matches("([^<]+)<(.+)>$".toRegex())
+    }
 }
